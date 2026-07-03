@@ -16,94 +16,89 @@
 
 ## 🏗️ Architecture
 
-1. Complete Production Architecture
-                                    INTERNET
-                                        │
-                                        │
-                           https://<YOUR_DOMAIN>
-                                        │
-                     ┌──────────────────┴──────────────────┐
-                     │              NGINX                  │
-                     │        Reverse Proxy (80/443)       │
-                     └───────────────┬──────────────────── ┘
-                                     │
-                 ┌───────────────────┴───────────────────┐
-                 │                                       │
-                 ▼                                       ▼
-        React Frontend                           NodeJS Backend
-          (Vite Build)                             (PM2 Managed)
-                                                         │
-                           ┌─────────────────────────────┴──────────────┐
-                           │                                            │
-                           ▼                                            ▼
-                        Redis Cache                               MongoDB Atlas
-                        (Port 6379)                              (Cloud Database)
+## Overall Architecture
 
-2. Redis Cache-Aside Architecture
+```mermaid
+flowchart TB
+    User[User Browser]
 
-This is important because it explains the caching strategy immediately.
+    Nginx[Nginx Reverse Proxy<br/>80/443]
 
-                    ┌───────────────────┐
-                    │      Client       │
-                    └─────────┬─────────┘
-                              │
-                              ▼
-                    GET /api/bikes
-                              │
-                              ▼
-                  ┌────────────────────┐
-                  │ Cache Middleware   │
-                  └─────────┬──────────┘
-                            │
-                    ┌───────┴───────┐
-                    │               │
-                 CACHE HIT      CACHE MISS
-                    │               │
-                    ▼               ▼
-                 Redis          MongoDB
-                    │               │
-                    │        Store in Redis
-                    │               │
-                    └───────┬───────┘
-                            ▼
-                       Client Response
+    Frontend[React Frontend<br/>Vite Build]
+    Backend[Node.js Backend<br/>PM2]
 
-3. Monitoring & Alerting Architecture
+    Redis[(Redis Cache)]
+    Mongo[(MongoDB Atlas)]
 
-This is probably the most impressive diagram in the README.
+    User --> Nginx
+    Nginx --> Frontend
+    Nginx --> Backend
 
-┌───────────────────────────────────────────────────────────────┐
-│                  APPLICATION SERVER                           │
-│                                                               │
-│  Node Exporter (9100)                                         │
-│  Nginx Exporter (9113)                                        │
-│  Redis Exporter (9121)                                        │
-│                                                               │
-└───────────────────────────┬───────────────────────────────────┘
-                            │
-                            │ Metrics
-                            ▼
+    Backend --> Redis
+    Backend --> Mongo
+```
 
-┌───────────────────────────────────────────────────────────────┐
-│                  MONITORING SERVER                            │
-│                                                               │
-│  Prometheus (9090)                                            │
-│         │                                                     │
-│         ▼                                                     │
-│  Alertmanager (9093)                                          │
-│         │                                                     │
-│         ▼                                                     │
-│  SMTP Server                                                  │
-│         │                                                     │
-│         ▼                                                     │
-│  Email Notifications                                          │
-│                                                               │
-│  Grafana (3000)                                               │
-│         ▲                                                     │
-│         │                                                     │
-│    Prometheus Datasource                                      │
-│                                                               │
-└───────────────────────────────────────────────────────────────┘
+This renders as a proper diagram and never gets displaced.
+
+Redis Cache-Aside Architecture (Mermaid)
+## Redis Cache-Aside Pattern
+
+```mermaid
+flowchart TD
+
+    Client[Client Request]
+
+    Middleware[Cache Middleware]
+
+    Redis[(Redis)]
+
+    Mongo[(MongoDB)]
+
+    Response[Response]
+
+    Client --> Middleware
+
+    Middleware --> Redis
+
+    Redis -->|Cache Hit| Response
+
+    Redis -->|Cache Miss| Mongo
+
+    Mongo -->|Store in Cache| Redis
+
+    Mongo --> Response
+```
+Monitoring Architecture (Mermaid)
+## Monitoring Architecture
+
+```mermaid
+flowchart LR
+
+    subgraph AppServer[Application Server]
+        NodeExp[Node Exporter :9100]
+        NginxExp[Nginx Exporter :9113]
+        RedisExp[Redis Exporter :9121]
+    end
+
+    subgraph MonitoringServer[Monitoring Server]
+        Prometheus[Prometheus :9090]
+        Grafana[Grafana :3000]
+        Alertmanager[Alertmanager :9093]
+    end
+
+    SMTP[SMTP Server]
+    Email[Email Notifications]
+
+    NodeExp --> Prometheus
+    NginxExp --> Prometheus
+    RedisExp --> Prometheus
+
+    Prometheus --> Grafana
+    Prometheus --> Alertmanager
+
+    Alertmanager --> SMTP
+    SMTP --> Email
+```
 
 ## ⚙️ Deployment Steps
 
