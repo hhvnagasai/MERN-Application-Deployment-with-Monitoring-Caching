@@ -38,9 +38,9 @@ flowchart TB
     Backend --> Mongo
 ```
 
-This renders as a proper diagram and never gets displaced.
 
-Redis Cache-Aside Architecture (Mermaid)
+
+Redis Cache-Aside Architecture 
 ## Redis Cache-Aside Pattern
 
 ```mermaid
@@ -68,7 +68,7 @@ flowchart TD
 
     Mongo --> Response
 ```
-Monitoring Architecture (Mermaid)
+Monitoring Architecture
 ## Monitoring Architecture
 
 ```mermaid
